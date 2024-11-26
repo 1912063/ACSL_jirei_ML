@@ -24,6 +24,7 @@ linear = linear.detach().numpy()
 dlinear_dx = dlinear_dx.detach().numpy()
 
 
+
 fig = plt.figure()
 ax1 = fig.add_subplot(2, 2, 1)
 ax1.plot(x, logsig, label="logsig")
