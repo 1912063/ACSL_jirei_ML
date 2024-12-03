@@ -34,7 +34,7 @@ def load_data(device, data, data_type):
 
         data = torch.from_numpy(data).to(device)
         survived = torch.from_numpy(survived).to(device)
-        return data, survived
+        return data, survived # data:学習に使用するデータ，survived:教師データ　なので分けて返している
 
 
     elif data_type == "test":

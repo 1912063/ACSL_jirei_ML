@@ -20,6 +20,7 @@ class titanic_classification(nn.Module):
 
         self.layers = layers
         self.linears = nn.ModuleList([nn.Linear(self.layers[i], self.layers[i+1]) for i in range(len(self.layers)-1)])
+        # main文で定義されているNNの構造を配列で全結合層として表している．
 
         self.iter = 1
         self.loss_hist = []
@@ -31,7 +32,7 @@ class titanic_classification(nn.Module):
     def forward(self, x):
         
         for i in range(len(self.layers)-2):         
-            z = self.linears[i](x)
+            z = self.linears[i](x) # linears:全結合層
             x = self.activation(z)
 
         x = self.linears[-1](x)
@@ -50,12 +51,12 @@ class titanic_classification(nn.Module):
         for self.iter in range(self.epochs):
             
             self.optimizer.zero_grad()
-            x = self.forward(self.data)
-            loss = self.cal_loss(x, self.survived)
+            x = self.forward(self.data) # 順伝播
+            loss = self.cal_loss(x, self.survived) # 誤差の計算
             print("Epochs =", self.iter, "loss =", loss)
-            loss.backward()
-            self.optimizer.step()
-            self.loss_hist.append(loss.item())
+            loss.backward() # 誤差逆伝播
+            self.optimizer.step() # パラメータ更新
+            self.loss_hist.append(loss.item()) # 出てきた誤差(loss)のデータ保存
             
     def closure(self):
             
