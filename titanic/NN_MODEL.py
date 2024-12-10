@@ -2,6 +2,7 @@
 import csv
 import torch
 import torch.nn as nn
+import matplotlib.pyplot as plt
 from load_data import load_data
 import numpy as np
 
@@ -57,6 +58,15 @@ class titanic_classification(nn.Module):
             loss.backward() # 誤差逆伝播
             self.optimizer.step() # パラメータ更新
             self.loss_hist.append(loss.item()) # 出てきた誤差(loss)のデータ保存
+        plt.plot(self.loss_hist, label = 'loss')
+        plt.xscale('log')  
+        plt.yscale('log')  
+        plt.xlabel('epoch')
+        plt.ylabel('loss')
+        plt.legend()
+        plt.grid()
+        plt.show()
+    
             
     def closure(self):
             

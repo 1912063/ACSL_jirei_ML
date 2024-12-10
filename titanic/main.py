@@ -24,7 +24,7 @@ optim = "Adam"
 # optim = "SGD"
 
 epochs = 10000 # 学習回数
-layers = np.array([3,10,10,1]) # NNの構造
+layers = np.array([5,10,10,1]) # NNの構造
 
 
 NN = titanic_classification(layers, epochs, device).to(device)  # モデルのインスタンス

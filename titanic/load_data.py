@@ -3,6 +3,13 @@ import csv
 import numpy as np
 import math
 
+def normalization(data): # データを正規化する関数
+    maxdata = max(data)
+    mindata = min(data)
+    for i in range(len(data)):
+        data[i] = (data[i] - mindata) / (maxdata - mindata)
+    return data
+
 def load_data(device, data, data_type):
     
 
@@ -27,10 +34,13 @@ def load_data(device, data, data_type):
         sex = np.array([[1 if i == "male" else 0 for i in sex]]).T
         age = ["0" if i == "" else i for i in age]
         age = np.array([[float(i) if not isinstance(i, int) else i for i in age]]).T
+        age = normalization(age)
 
+        sibSp = np.array([[float(i) if not isinstance(i, int) else i for i in sibSp]]).T
+        parch = np.array([[float(i) if not isinstance(i, int) else i for i in parch]]).T
         survived = np.array([[float(i) if not isinstance(i, int) else i for i in survived]]).T
 
-        data = np.concatenate([pclass, sex, age], axis=1)
+        data = np.concatenate([pclass, sex, age, sibSp, parch], axis=1)
 
         data = torch.from_numpy(data).to(device)
         survived = torch.from_numpy(survived).to(device)
@@ -56,10 +66,13 @@ def load_data(device, data, data_type):
         sex = np.array([[1 if i == "male" else 0 for i in sex]]).T
         age = ["0" if i == "" else i for i in age]
         age = np.array([[float(i) if not isinstance(i, int) else i for i in age]]).T
+        age = normalization(age)
+        sibSp = np.array([[float(i) if not isinstance(i, int) else i for i in sibSp]]).T
+        parch = np.array([[float(i) if not isinstance(i, int) else i for i in parch]]).T
 
 
         
-        data = np.concatenate([pclass, sex, age], axis=1)
+        data = np.concatenate([pclass, sex, age, sibSp, parch], axis=1)
 
         data = torch.from_numpy(data).to(device)
 
