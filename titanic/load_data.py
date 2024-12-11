@@ -6,9 +6,10 @@ import math
 def normalization(data): # データを正規化する関数
     maxdata = max(data)
     mindata = min(data)
+    tmp = np.zeros_like(data)
     for i in range(len(data)):
-        data[i] = (data[i] - mindata) / (maxdata - mindata)
-    return data
+        tmp[i] = (data[i] - mindata) / (maxdata - mindata)
+    return tmp
 
 def load_data(device, data, data_type):
     
@@ -31,13 +32,16 @@ def load_data(device, data, data_type):
         embarked = data[:, 11]
 
         pclass = np.array([[float(i) if not isinstance(i, int) else i for i in pclass]]).T
+        pclass = normalization(pclass)
         sex = np.array([[1 if i == "male" else 0 for i in sex]]).T
         age = ["0" if i == "" else i for i in age]
         age = np.array([[float(i) if not isinstance(i, int) else i for i in age]]).T
         age = normalization(age)
 
         sibSp = np.array([[float(i) if not isinstance(i, int) else i for i in sibSp]]).T
+        sibSp = normalization(sibSp)
         parch = np.array([[float(i) if not isinstance(i, int) else i for i in parch]]).T
+        parch = normalization(parch)
         survived = np.array([[float(i) if not isinstance(i, int) else i for i in survived]]).T
 
         data = np.concatenate([pclass, sex, age, sibSp, parch], axis=1)
@@ -63,12 +67,15 @@ def load_data(device, data, data_type):
 
         passengerId = np.array([[float(i) if not isinstance(i, int) else i for i in passengerId]]).reshape((len(data), 1))
         pclass = np.array([[float(i) if not isinstance(i, int) else i for i in pclass]]).T
+        pclass = normalization(pclass)
         sex = np.array([[1 if i == "male" else 0 for i in sex]]).T
         age = ["0" if i == "" else i for i in age]
         age = np.array([[float(i) if not isinstance(i, int) else i for i in age]]).T
         age = normalization(age)
         sibSp = np.array([[float(i) if not isinstance(i, int) else i for i in sibSp]]).T
+        sibSp = normalization(sibSp)
         parch = np.array([[float(i) if not isinstance(i, int) else i for i in parch]]).T
+        parch = normalization(parch)
 
 
         
@@ -89,4 +96,8 @@ def load_data(device, data, data_type):
 
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    load_data(device)
+    with open("data/origin/train.csv") as f:
+        reader = csv.reader(f)
+        l = [row for row in reader]
+    load_data(device, l, "train")
+    
