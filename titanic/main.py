@@ -19,12 +19,12 @@ print(device)
 "L-BFGS" "Adam" "SGD" "RMSprop"
 
 optim = "L-BFGS"
-# optim = "Adam"
+optim = "Adam"
 # optim = "RMSprop"
 # optim = "SGD"
 
-epochs = 10000
-layers = np.array([3,10,10,1])
+epochs = 3000
+layers = np.array([6,10,10,1])
 
 
 NN = titanic_classification(layers, epochs, device).to(device)  # モデルのインスタンス
@@ -39,7 +39,7 @@ if optim == "L-BFGS":
                                 )
     scheduler = None
 elif optim == "Adam":
-    NN.optimizer = torch.optim.Adam(NN.parameters(), lr=0.0001)
+    NN.optimizer = torch.optim.Adam(NN.parameters(), lr=0.0005)
     # scheduler = None
 
 elif optim == "SGD":
