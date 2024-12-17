@@ -32,26 +32,12 @@ def load_data(device, data, data_type):
         embarked = data[:, 11]
 
         pclass = np.array([[float(i) if not isinstance(i, int) else i for i in pclass]]).T
-<<<<<<< HEAD
-        pclass = normalization(pclass)
-=======
-
->>>>>>> 2024
         sex = np.array([[1 if i == "male" else 0 for i in sex]]).T
         
         age = ["0" if i == "" else i for i in age]
         age = np.array([[float(i) if not isinstance(i, int) else i for i in age]]).T
-        age = normalization(age)
+        # age = normalization(age)
 
-<<<<<<< HEAD
-        sibSp = np.array([[float(i) if not isinstance(i, int) else i for i in sibSp]]).T
-        sibSp = normalization(sibSp)
-        parch = np.array([[float(i) if not isinstance(i, int) else i for i in parch]]).T
-        parch = normalization(parch)
-        survived = np.array([[float(i) if not isinstance(i, int) else i for i in survived]]).T
-
-        data = np.concatenate([pclass, sex, age, sibSp, parch], axis=1)
-=======
         sibSp = ["0" if i == "" else i for i in sibSp]
         sibSp = np.array([[float(i) if not isinstance(i, int) else i for i in sibSp]]).T
 
@@ -82,17 +68,12 @@ def load_data(device, data, data_type):
         # survived_conv[[0],:] = survived[:418].T
         # survived_conv[[1],:] = survived[230:648].T
         # survived_conv[[2],:] = survived[473:891].T
->>>>>>> 2024
 
         data = torch.from_numpy(data).to(device)
         data_conv = torch.from_numpy(data_conv).to(device)
         survived = torch.from_numpy(survived).to(device)
-<<<<<<< HEAD
-        return data, survived # data:学習に使用するデータ，survived:教師データ　なので分けて返している
-=======
         survived_conv = torch.from_numpy(survived_conv).to(device)
         return data, data_conv, survived, survived_conv
->>>>>>> 2024
 
 
     elif data_type == "test":
@@ -111,15 +92,15 @@ def load_data(device, data, data_type):
 
         passengerId = np.array([[float(i) if not isinstance(i, int) else i for i in passengerId]]).reshape((len(data), 1))
         pclass = np.array([[float(i) if not isinstance(i, int) else i for i in pclass]]).T
-        pclass = normalization(pclass)
+        # pclass = normalization(pclass)
         sex = np.array([[1 if i == "male" else 0 for i in sex]]).T
         age = ["0" if i == "" else i for i in age]
         age = np.array([[float(i) if not isinstance(i, int) else i for i in age]]).T
-        age = normalization(age)
+        # age = normalization(age)
         sibSp = np.array([[float(i) if not isinstance(i, int) else i for i in sibSp]]).T
-        sibSp = normalization(sibSp)
+        # sibSp = normalization(sibSp)
         parch = np.array([[float(i) if not isinstance(i, int) else i for i in parch]]).T
-        parch = normalization(parch)
+        # parch = normalization(parch)
 
         sibSp = ["0" if i == "" else i for i in sibSp]
         sibSp = np.array([[float(i) if not isinstance(i, int) else i for i in sibSp]]).T
@@ -130,11 +111,7 @@ def load_data(device, data, data_type):
         fare = ["0" if i == "" else i for i in fare]
         fare = np.array([[float(i) if not isinstance(i, int) else i for i in fare]]).T
         
-<<<<<<< HEAD
-        data = np.concatenate([pclass, sex, age, sibSp, parch], axis=1)
-=======
         data = np.concatenate([pclass, sex, age, sibSp, parch, fare], axis=1)
->>>>>>> 2024
 
         data = torch.from_numpy(data).to(device)
 
@@ -152,13 +129,6 @@ def load_data(device, data, data_type):
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     with open("data/origin/train.csv") as f:
-<<<<<<< HEAD
-        reader = csv.reader(f)
-        l = [row for row in reader]
-    load_data(device, l, "train")
-    
-=======
             reader = csv.reader(f)
             l = [row for row in reader]
     load_data(device, l, "train")
->>>>>>> 2024

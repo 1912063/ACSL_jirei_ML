@@ -28,6 +28,10 @@ class titanic_classification(nn.Module):
         self.conv2 = nn.Conv1d(in_channels=1, out_channels=15, kernel_size=3, padding=0)
         self.conv3 = nn.Conv1d(in_channels=1, out_channels=15, kernel_size=4, padding=0)
         self.conv4 = nn.Conv1d(in_channels=1, out_channels=15, kernel_size=5, padding=0)
+        # in_channels：入力データの個数（ここでは1人に着目するという意味）
+        # out_channels：フィルタの枚数
+        # kernel_size：フィルタのサイズ
+        # padding：データの空白部分の個数（ここではパティングなしにしている．→データの個数が少なくパティング影響が強く出そうなため）
         
         # Dropout (過学習対策)
         self.dropout = nn.Dropout(0.3)
@@ -45,8 +49,8 @@ class titanic_classification(nn.Module):
 
         self.iter = 1
         self.loss_hist = []
-        # self.loss_function = nn.MSELoss(reduction ='mean')
-        self.loss_function = nn.BCEWithLogitsLoss()
+        self.loss_function = nn.MSELoss(reduction ='mean')
+        # self.loss_function = nn.BCEWithLogitsLoss()
         # self.activation = nn.Tanh()
         self.activation = nn.ReLU()
         
@@ -91,8 +95,8 @@ class titanic_classification(nn.Module):
         x = self.activation(self.fc1(x))
         x = self.activation(self.fc2(x))
         # x = self.dropout(x)  # 過学習防止
-        # x = torch.sigmoid(self.fc3(x))  # 2値分類用
-        x = self.fc3(x) #LOSSがnn.BCEWithLogitsLoss()の時sigmoid不要
+        x = torch.sigmoid(self.fc3(x))  # 2値分類用
+        # x = self.fc3(x) #LOSSがnn.BCEWithLogitsLoss()の時sigmoid不要
         return x
     
 
@@ -107,10 +111,6 @@ class titanic_classification(nn.Module):
         for self.iter in range(self.epochs):
             
             self.optimizer.zero_grad()
-<<<<<<< HEAD
-            x = self.forward(self.data) # 順伝播
-            loss = self.cal_loss(x, self.survived) # 誤差の計算
-=======
             # x = self.forward(self.data)
             # loss = self.cal_loss(x, self.survived)
 
@@ -118,7 +118,6 @@ class titanic_classification(nn.Module):
             loss = self.cal_loss(x, self.survived_conv)
 
             
->>>>>>> 2024
             print("Epochs =", self.iter, "loss =", loss)
             loss.backward() # 誤差逆伝播
             self.optimizer.step() # パラメータ更新
