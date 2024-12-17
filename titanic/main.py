@@ -18,13 +18,22 @@ print(device)
 # 選べるoptimizer
 "L-BFGS" "Adam" "SGD" "RMSprop" # 使用したい最適化アルゴリズムを決める．
 
+<<<<<<< HEAD
 # optim = "L-BFGS"
+=======
+optim = "L-BFGS"
+>>>>>>> 2024
 optim = "Adam"
 # optim = "RMSprop"
 # optim = "SGD"
 
+<<<<<<< HEAD
 epochs = 10000 # 学習回数
 layers = np.array([5,10,10,1]) # NNの構造
+=======
+epochs = 20000
+layers = np.array([6,10,10,1])
+>>>>>>> 2024
 
 
 NN = titanic_classification(layers, epochs, device).to(device)  # モデルのインスタンス
@@ -39,7 +48,7 @@ if optim == "L-BFGS":
                                 )
     scheduler = None
 elif optim == "Adam":
-    NN.optimizer = torch.optim.Adam(NN.parameters(), lr=0.0001)
+    NN.optimizer = torch.optim.Adam(NN.parameters(), lr=0.0005)
     # scheduler = None
 
 elif optim == "SGD":

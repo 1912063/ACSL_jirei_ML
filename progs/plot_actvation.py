@@ -24,6 +24,7 @@ linear = linear.detach().numpy()
 dlinear_dx = dlinear_dx.detach().numpy()
 
 
+<<<<<<< HEAD
 
 # fig = plt.figure()
 # ax1 = fig.add_subplot(2, 2, 1)
@@ -38,13 +39,35 @@ dlinear_dx = dlinear_dx.detach().numpy()
 # ax3.plot(x, ReLU, label="ReLU")
 # ax3.plot(x, dReLU_dx, label="dReLU")
 
+=======
+# fig = plt.figure()
+# ax1 = fig.add_subplot(2, 2, 1)
+# ax1.plot(x, logsig, label="logsig")
+# ax1.plot(x, dlogsig_dx, label="dlogsig")
+
+# ax2 = fig.add_subplot(2, 2, 2)
+# ax2.plot(x, tanh, label="tanh")
+# ax2.plot(x, dtanh_dx, label="dtanh")
+
+# ax3 = fig.add_subplot(2, 2, 3)
+# ax3.plot(x, ReLU, label="ReLU")
+# ax3.plot(x, dReLU_dx, label="dReLU")
+
+>>>>>>> 2024
 # ax4 = fig.add_subplot(2, 2, 4)
 # ax4.plot(x, linear, label="linear")
 # ax4.plot(x, dlinear_dx, label="dlinear")
 # plt.show()
+<<<<<<< HEAD
 plt.figure()
 plt.plot(x, logsig, label="sigmoid")
 plt.plot(x, dlogsig_dx, label="dsigmoid")
+=======
+
+plt.figure()
+plt.plot(x, logsig, label="logsig")
+plt.plot(x, dlogsig_dx, label="dlogsig")
+>>>>>>> 2024
 plt.legend()
 plt.xlabel("x")
 plt.ylabel("y")
@@ -54,15 +77,19 @@ plt.show()
 plt.figure()
 plt.plot(x, tanh, label="tanh")
 plt.plot(x, dtanh_dx, label="dtanh")
+<<<<<<< HEAD
 plt.legend()
 plt.xlabel("x")
 plt.ylabel("y")
 plt.grid()
+=======
+>>>>>>> 2024
 plt.show()
 
 plt.figure()
 plt.plot(x, ReLU, label="ReLU")
 plt.plot(x, dReLU_dx, label="dReLU")
+<<<<<<< HEAD
 plt.legend()
 plt.xlabel("x")
 plt.ylabel("y")
@@ -76,4 +103,11 @@ plt.legend()
 plt.xlabel("x")
 plt.ylabel("y")
 plt.grid()
+=======
+plt.show()
+
+plt.figure()
+plt.plot(x, linear, label="linear")
+plt.plot(x, dlinear_dx, label="dlinear")
+>>>>>>> 2024
 plt.show()
