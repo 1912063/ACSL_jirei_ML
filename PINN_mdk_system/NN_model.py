@@ -45,8 +45,8 @@ class my_NNmodel(torch.nn.Module):
         self.tau = 5.0
         #初期値
         pi = torch.tensor([np.pi])
-        self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
-        self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
+        # self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
+        # self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
 
         self.x_ini = torch.tensor([[0.0]]).to(self.device) #角度
         self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
@@ -168,10 +168,11 @@ class my_NNmodel(torch.nn.Module):
         state = np.array([self.x_ini, self.dx_ini]).reshape((1,2))
         # G, L, M, D, tau
         # y_larning = integrate.odeint(sol_ode.derivs, state, learning_data[:,0], args=(9.81, self.L, self.m, self.d, self.tau))
-        y_larning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.m, self.d, 15/len(learning_data), 15)
+        time = 15
+        y_larning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.m, self.d, time/len(learning_data), time)
         plt.figure()
-        plt.plot(learning_data[:,0], y_larning[:,0], label="true")
         plt.plot(learning_data[:,0], output, label="predicted")
+        plt.plot(learning_data[:,0], y_larning[:,0], label="true")
         plt.xlabel(r"$t$")
         plt.ylabel(r"$\theta$")
         plt.legend()
@@ -186,47 +187,45 @@ class my_NNmodel(torch.nn.Module):
         plt.xlim(0,int(self.iter))
         plt.grid(linestyle='dotted', linewidth=0.5)
         plt.plot(self.loss_hist)
-        plt.show()
-
+        # plt.show()
         output = output.reshape(len(output), )
         time_span = 10/1000
         x1 = self.L*np.sin(output)
         y1 = -self.L*np.cos(output)
-
+        x2 = self.L*np.sin(y_larning[:,0])
+        y2 = -self.L*np.cos(y_larning[:,0])
         fig = plt.figure()
         ax = fig.add_subplot(111, autoscale_on=False, xlim=(-2, 2), ylim=(-2, 2))
         ax.set_aspect('equal')
         ax.grid()
         ax.set_xlabel(r"$x$")
         ax.set_ylabel(r"$y$")
-
-        line, = ax.plot([], [], 'o-', lw=2)
+        line, = ax.plot([], [], 'o-', lw=2, label="predicted")
+        line2, = ax.plot([], [], 'o-', lw=2, label="true")
+        ax.legend()
         time_template = 'time = %.1fs'
         time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
 
-
         def init():
             line.set_data([], [])
+            line2.set_data([], [])
             time_text.set_text('')
-            return line, time_text
-
-
+            return line, line2, time_text
+        
         def animate(i):
             i = 1*i
             thisx = [0, x1[i]]
             thisy = [0, y1[i]]
-
+            thisx2 = [0, x2[i]]
+            thisy2 = [0, y2[i]]
             line.set_data(thisx, thisy)
+            line2.set_data(thisx2, thisy2)
             time_text.set_text(time_template % (i*time_span))
-            return line, time_text
-
+            return line, line2, time_text
         print(len(output))
-        ani = animation.FuncAnimation(fig, animate, range(1, int(len(output))),
+        ani = animation.FuncAnimation(fig, animate, range(1, int(time/time_span)),
                                     interval=5, blit=True, init_func=init)
-
-
         # ani.save("pendulum.gif",writer=PillowWriter())
         ani.save('pendulum.mp4', writer="ffmpeg")
 # plt.show()
-
         return output
