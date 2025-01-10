@@ -168,7 +168,7 @@ class my_NNmodel(torch.nn.Module):
         state = np.array([self.x_ini, self.dx_ini]).reshape((1,2))
         # G, L, M, D, tau
         # y_larning = integrate.odeint(sol_ode.derivs, state, learning_data[:,0], args=(9.81, self.L, self.m, self.d, self.tau))
-        time = 15
+        time = 15 # ！！15秒以外にするとtrueとpredictedの軸がズレて，正しいグラフが描画されない！！
         y_larning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.m, self.d, time/len(learning_data), time)
         plt.figure()
         plt.plot(learning_data[:,0], output, label="predicted")

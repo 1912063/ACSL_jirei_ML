@@ -18,7 +18,7 @@ print(device)
 layers = np.array([2,  20, 20, 20, 20, 1])   #中間層
 optimizer = "Adam"
 # optimizer = "L-BFGS"
-max_epochs = 100000
+max_epochs = 10000
 
 my_Net = NN(layers, optimizer, max_epochs, device).to(device)
 
