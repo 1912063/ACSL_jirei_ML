@@ -26,7 +26,7 @@ def derivs(state, t, g, L, M, D, tau):
 
     return dxdt
 
-def func(x, tau, L, m, d, g):
+def func(x, tau, L, d, m, g):
     
     dxdt = np.concatenate(([x[0,[1]]], [-g/L*np.sin(x[0,[0]])-d/(m*L)*x[0,[1]]+1/(m*L**2)*tau]), axis=1)
 
