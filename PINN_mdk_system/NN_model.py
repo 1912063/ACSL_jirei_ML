@@ -45,11 +45,11 @@ class my_NNmodel(torch.nn.Module):
         self.tau = 5.0
         #初期値
         pi = torch.tensor([np.pi])
-        # self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
-        # self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
-
-        self.x_ini = torch.tensor([[0.0]]).to(self.device) #角度
+        self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
         self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
+
+        # self.x_ini = torch.tensor([[0.0]]).to(self.device) #角度
+        # self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
 
         #############################################################
 
