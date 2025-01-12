@@ -15,10 +15,10 @@ np.random.seed(123)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
-layers = np.array([2,  20, 20, 20, 20, 1])   #中間層
+layers = np.array([2, 20, 20, 20, 20, 1])   #中間層
 optimizer = "Adam"
 # optimizer = "L-BFGS"
-max_epochs = 10000
+max_epochs = 5000
 
 my_Net = NN(layers, optimizer, max_epochs, device).to(device)
 
