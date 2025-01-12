@@ -40,9 +40,9 @@ class my_NNmodel(torch.nn.Module):
         #############################################################
         #振り子のパラメータ 自由に変更可能
         self.L = 1.0    #振り子の紐の長さ
-        self.d = 3.0
+        self.d = 0.5
         self.m = 1.0
-        self.tau = 5.0
+        self.tau = 0.0
         #初期値
         pi = torch.tensor([np.pi])
         self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
