@@ -44,12 +44,12 @@ class my_NNmodel(torch.nn.Module):
         self.m = 1.0
         self.tau = 0.0
         #初期値
-        pi = torch.tensor([np.pi])
-        self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
-        self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
-
-        # self.x_ini = torch.tensor([[0.0]]).to(self.device) #角度
+        # pi = torch.tensor([np.pi])
+        # self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
         # self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
+
+        self.x_ini = torch.tensor([[0.0]]).to(self.device) #角度
+        self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
 
         #############################################################
 
@@ -169,7 +169,7 @@ class my_NNmodel(torch.nn.Module):
         # G, L, M, D, tau
         # y_larning = integrate.odeint(sol_ode.derivs, state, learning_data[:,0], args=(9.81, self.L, self.m, self.d, self.tau))
         time = 15 # ！！15秒以外にするとtrueとpredictedの軸がズレて，正しいグラフが描画されない！！
-        y_larning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.m, self.d, time/len(learning_data), time)
+        y_larning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.d, self.m, time/len(learning_data), time)
         plt.figure()
         plt.plot(learning_data[:,0], output, label="predicted")
         plt.plot(learning_data[:,0], y_larning[:,0], label="true")
