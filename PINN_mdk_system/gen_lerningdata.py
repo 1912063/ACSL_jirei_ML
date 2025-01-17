@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 np.random.seed(123)
 
-tau = 5.0
+tau = 2.0
 time = 15
 #学習データ
 num_data = 1500 ##
