@@ -43,8 +43,8 @@ class titanic_classification(nn.Module):
 
         self.iter = 1
         self.loss_hist = []
-        # self.loss_function = nn.MSELoss(reduction ='mean')
-        self.loss_function = nn.BCEWithLogitsLoss()
+        self.loss_function = nn.MSELoss(reduction ='mean')
+        # self.loss_function = nn.BCEWithLogitsLoss()
         # self.activation = nn.Tanh()
         self.activation = nn.ReLU()
         
@@ -89,8 +89,8 @@ class titanic_classification(nn.Module):
         x = self.activation(self.fc1(x))
         x = self.activation(self.fc2(x))
         # x = self.dropout(x)  # 過学習防止
-        # x = torch.sigmoid(self.fc3(x))  # 2値分類用
-        x = self.fc3(x) #LOSSがnn.BCEWithLogitsLoss()の時sigmoid不要
+        x = torch.sigmoid(self.fc3(x))  # 2値分類用
+        # x = self.fc3(x) #LOSSがnn.BCEWithLogitsLoss()の時sigmoid不要
         return x
     
 

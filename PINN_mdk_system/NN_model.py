@@ -168,10 +168,13 @@ class my_NNmodel(torch.nn.Module):
         state = np.array([self.x_ini, self.dx_ini]).reshape((1,2))
         # G, L, M, D, tau
         # y_larning = integrate.odeint(sol_ode.derivs, state, learning_data[:,0], args=(9.81, self.L, self.m, self.d, self.tau))
-        y_larning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.m, self.d, 15/len(learning_data), 15)
+        time = 15
+        y_larning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.m, self.d, 0.025, time)
+        len_y = int(time/0.025)
         plt.figure()
-        plt.plot(learning_data[:,0], y_larning[:,0], label="true")
-        plt.plot(learning_data[:,0], output, label="predicted")
+        plt.plot(learning_data[0:len_y,0], y_larning[:,0], label="true")
+        plt.plot(learning_data[0:len_y,0], output[0:len_y], label="predicted")
+        plt.xlim(0, time)
         plt.xlabel(r"$t$")
         plt.ylabel(r"$\theta$")
         plt.legend()
@@ -186,7 +189,7 @@ class my_NNmodel(torch.nn.Module):
         plt.xlim(0,int(self.iter))
         plt.grid(linestyle='dotted', linewidth=0.5)
         plt.plot(self.loss_hist)
-        plt.show()
+        # plt.show()
 
         output = output.reshape(len(output), )
         time_span = 10/1000
@@ -221,7 +224,7 @@ class my_NNmodel(torch.nn.Module):
             return line, time_text
 
         print(len(output))
-        ani = animation.FuncAnimation(fig, animate, range(1, int(len(output))),
+        ani = animation.FuncAnimation(fig, animate, range(1, int(time/time_span)),
                                     interval=5, blit=True, init_func=init)
 
 

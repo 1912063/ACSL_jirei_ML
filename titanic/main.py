@@ -23,7 +23,7 @@ optim = "Adam"
 # optim = "RMSprop"
 # optim = "SGD"
 
-epochs = 20000
+epochs = 5000
 layers = np.array([6,10,10,1])
 
 
