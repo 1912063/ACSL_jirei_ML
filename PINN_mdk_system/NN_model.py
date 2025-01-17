@@ -42,14 +42,14 @@ class my_NNmodel(torch.nn.Module):
         self.L = 1.0    #振り子の紐の長さ
         self.d = 0.5
         self.m = 1.0
-        self.tau = 0.0
+        self.tau = 5.0 #！！！！値を変更したらgen_learningdata.py内のtauも変更する．！！！
         #初期値
-        # pi = torch.tensor([np.pi])
-        # self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
-        # self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
-
-        self.x_ini = torch.tensor([[0.0]]).to(self.device) #角度
+        pi = torch.tensor([np.pi])
+        self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
         self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
+
+        # self.x_ini = torch.tensor([[0.0]]).to(self.device) #角度
+        # self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
 
         #############################################################
 
@@ -167,12 +167,14 @@ class my_NNmodel(torch.nn.Module):
         self.dx_ini = self.dx_ini.to("cpu").detach().numpy()
         state = np.array([self.x_ini, self.dx_ini]).reshape((1,2))
         # G, L, M, D, tau
-        # y_larning = integrate.odeint(sol_ode.derivs, state, learning_data[:,0], args=(9.81, self.L, self.m, self.d, self.tau))
-        time = 15 # ！！15秒以外にするとtrueとpredictedの軸がズレて，正しいグラフが描画されない！！
-        y_larning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.d, self.m, time/len(learning_data), time)
+        # y_learning = integrate.odeint(sol_ode.derivs, state, learning_data[:,0], args=(9.81, self.L, self.m, self.d, self.tau))
+
+        time = learning_data[-1,0] # ！！！！！gen_learningdata.py内のtimeと値を一致させる．！！！！！
+        
+        y_learning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.d, self.m, time/len(learning_data), time)
         plt.figure()
         plt.plot(learning_data[:,0], output, label="predicted")
-        plt.plot(learning_data[:,0], y_larning[:,0], label="true")
+        plt.plot(learning_data[:,0], y_learning[:,0], label="true")
         plt.xlabel(r"$t$")
         plt.ylabel(r"$\theta$")
         plt.legend()
@@ -192,8 +194,8 @@ class my_NNmodel(torch.nn.Module):
         time_span = 10/1000
         x1 = self.L*np.sin(output)
         y1 = -self.L*np.cos(output)
-        x2 = self.L*np.sin(y_larning[:,0])
-        y2 = -self.L*np.cos(y_larning[:,0])
+        x2 = self.L*np.sin(y_learning[:,0])
+        y2 = -self.L*np.cos(y_learning[:,0])
         fig = plt.figure()
         ax = fig.add_subplot(111, autoscale_on=False, xlim=(-2, 2), ylim=(-2, 2))
         ax.set_aspect('equal')
