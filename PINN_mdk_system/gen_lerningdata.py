@@ -1,12 +1,13 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from pyDOE import lhs
 
 
 np.random.seed(123)
 
 tau = 2.0
-time = 15
+time = 5.
 #学習データ
 num_data = 1500 ##
 #----------------------------------------------
@@ -21,6 +22,12 @@ input_array = tau*np.sin(np.linspace(0, time, num_data)).reshape((num_data,1))
 #----------------------------------------------
 learning_data = np.linspace(0., float(time), num_data).reshape((num_data,1)) ##
 learning_data = np.concatenate([learning_data, input_array],axis=1)
+
+learning_data = lhs(2, 80000)
+
+learning_data[:, 0] = time*learning_data[:, 0]
+learning_data[:, 1] = 2*tau*learning_data[:, 1] - tau
+
 print(learning_data.shape)
 
 np.save("datas/learning_data.npy", learning_data)
