@@ -80,18 +80,18 @@ class my_NNmodel(torch.nn.Module):
 
         #####################################################
         #運動方程式
-        f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + 9.81/self.L*torch.sin(output)# - tau/(self.m*self.L**2) 
+        f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + 9.81/self.L*torch.sin(output) - tau/(self.m*self.L**2) 
         #####################################################
 
-        f_x_ini = output[[0]]
-        f_dx_ini = dxdt[0, [0]].reshape((1,1))
+        # f_x_ini = output[[0]]
+        # f_dx_ini = dxdt[0, [0]].reshape((1,1))
 
-        E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
-        E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
+        # E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
+        # E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
 
         E = self.loss_function(f, self.target)  #運動方程式の誤差関数
 
-        return E + 5*E_x_ini + 5*E_dx_ini   #重み調整
+        return E# + 5*E_x_ini + 5*E_dx_ini   #重み調整
     
     def train(self):
         
@@ -161,8 +161,19 @@ class my_NNmodel(torch.nn.Module):
     
     
     def test(self):
-        output = self.forward(self.learning_data)
-        learning_data = self.learning_data.to("cpu").detach().numpy()#.reshape(len(self.learning_data))
+        num_data = 1500
+        time = 5.0
+        # input_array = self.tau*np.sin(np.linspace(0, time, num_data)).reshape((num_data,1))
+        
+        learning_data = np.linspace(0., float(time), num_data).reshape((num_data,1)) ##
+        input_array = np.zeros_like(learning_data)
+        learning_data = np.concatenate([learning_data, input_array],axis=1)
+        learning_data = torch.from_numpy(learning_data).to(self.device)
+
+        output = self.forward(learning_data)
+        learning_data = learning_data.to("cpu").detach().numpy()#.reshape(len(self.learning_data))
+        # learning_data = self.learning_data.to("cpu").detach().numpy()#.reshape(len(self.learning_data))
+        
         output = output.to("cpu").detach().numpy()
         self.x_ini = self.x_ini.to("cpu").detach().numpy()
         self.dx_ini = self.dx_ini.to("cpu").detach().numpy()
@@ -170,7 +181,7 @@ class my_NNmodel(torch.nn.Module):
         # G, L, M, D, tau
         # y_learning = integrate.odeint(sol_ode.derivs, state, learning_data[:,0], args=(9.81, self.L, self.m, self.d, self.tau))
 
-        time = learning_data[-1,0] # ！！！！！gen_learningdata.py内のtimeと値を一致させる．！！！！！
+        # time = learning_data[-1,0] # ！！！！！gen_learningdata.py内のtimeと値を一致させる．！！！！！
         
         y_learning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.d, self.m, time/len(learning_data), time)
         plt.figure()
