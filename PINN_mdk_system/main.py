@@ -19,7 +19,7 @@ print(device)
 ###########################################
 # 層構造 変更可能部
 input_dim = 2           # 入力層次元数
-num_middle_layers = 12  # 中間層 層数
+num_middle_layers = 4  # 中間層 層数
 num_middle_neurons = 20 # 中間層 ニューロン数
 output_dim = 1          # 出力層 次元数
 ###########################################

@@ -21,7 +21,7 @@ class my_NNmodel(torch.nn.Module):
         self.device = device
         self.linears = nn.ModuleList([nn.Linear(layers[i], layers[i+1]) for i in range(len(layers)-1)])
         if optimizer == "Adam":
-            self.optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
+            self.optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
 
         elif optimizer == "L-BFGS":
             self.optimizer = torch.optim.LBFGS(self.parameters(),lr=1, 
@@ -41,9 +41,9 @@ class my_NNmodel(torch.nn.Module):
         #############################################################
         #振り子のパラメータ 自由に変更可能
         self.L = 1.0    #振り子の紐の長さ
-        self.d = 1.0
+        self.d = 0.5
         self.m = 1.0
-        self.tau = 0.0 #！！！！値を変更したらgen_learningdata.py内のtauも変更する．！！！
+        self.tau = 2.0 #！！！！値を変更したらgen_learningdata.py内のtauも変更する．！！！
         #初期値
         # pi = torch.tensor([np.pi])
         # self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
@@ -166,7 +166,8 @@ class my_NNmodel(torch.nn.Module):
         # input_array = self.tau*np.sin(np.linspace(0, time, num_data)).reshape((num_data,1))
         
         learning_data = np.linspace(0., float(time), num_data).reshape((num_data,1)) ##
-        input_array = np.zeros_like(learning_data)
+        # input_array = np.zeros_like(learning_data)
+        input_array = self.tau*np.sin(learning_data)
         learning_data = np.concatenate([learning_data, input_array],axis=1)
         learning_data = torch.from_numpy(learning_data).to(self.device)
 
