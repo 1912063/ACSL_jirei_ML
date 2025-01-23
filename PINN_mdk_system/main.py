@@ -17,20 +17,25 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
 ###########################################
-# 層構造 変更可能部
+# 変更可能箇所
+###########################################
+# 層構造
 input_dim = 2           # 入力層次元数
 num_middle_layers = 4  # 中間層 層数
 num_middle_neurons = 20 # 中間層 ニューロン数
 output_dim = 1          # 出力層 次元数
+###########################################
+# NN設定条件
+# optimizer = "Adam"
+optimizer = "L-BFGS"
+max_epochs = 1
 ###########################################
 input_layer = np.full(1, input_dim, dtype=np.int16)
 middle_layers = np.full(num_middle_layers, num_middle_neurons, dtype=np.int16)
 output_layer = np.full(1, output_dim, dtype=np.int16)
 layers = np.concatenate([input_layer, middle_layers, output_layer])
 
-# optimizer = "Adam"
-optimizer = "L-BFGS"
-max_epochs = 10000
+
 
 my_Net = NN(layers, optimizer, max_epochs, device).to(device)
 if optimizer == "L-BFGS":
