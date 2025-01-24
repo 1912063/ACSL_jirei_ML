@@ -205,7 +205,7 @@ class my_NNmodel(torch.nn.Module):
 
         # time = input_data[-1,0] # ！！！！！gen_inputdata.py内のtimeと値を一致させる．！！！！！
         
-        y_learning = solve_ode(state)
+        y_learning = self.solve_ode(state)
         plt.figure()
         plt.plot(input_data[:,0], output, label="predicted")
         plt.plot(input_data[:,0], y_learning[:,0], label="true")
