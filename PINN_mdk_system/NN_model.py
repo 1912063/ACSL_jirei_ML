@@ -4,10 +4,16 @@ import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.integrate as integrate
-from sol_ode import solve_ode
 import gen_data
 import matplotlib.animation as animation
 from matplotlib.animation import PillowWriter
+
+from google.colab import drive
+drive.mount('/content/drive')
+import sys
+sys.path.append('/content/drive/MyDrive/Colab Notebooks')
+
+from PINN_MDK_SYSTEM.sol_ode import solve_ode
 
 torch.set_default_dtype(torch.float64)
 
@@ -244,7 +250,7 @@ class my_NNmodel(torch.nn.Module):
             time_text.set_text(time_template % (i*time_span))
             return line, line2, time_text
         print(len(output))
-        ani = animation.FuncAnimation(fig, animate, range(1, int(time/time_span)),
+        ani = animation.FuncAnimation(fig, animate, range(1, int(self.time/time_span)),
                                     interval=5, blit=True, init_func=init)
         # ani.save("pendulum.gif",writer=PillowWriter())
         ani.save('pendulum.mp4', writer="ffmpeg")
