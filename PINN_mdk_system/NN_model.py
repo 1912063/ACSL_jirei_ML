@@ -156,7 +156,7 @@ class my_NNmodel(torch.nn.Module):
         return loss
 
     def import_datas(self):
-        learning_data = np.load("/content/drive/MyDrive/Colab Notebooks/PINN_MDK_SYSTEM/datas/learning_data.npy", allow_pickle=True)
+        learning_data = np.load("datas/learning_data.npy", allow_pickle=True)
         learning_data = torch.from_numpy(learning_data).to(self.device)
 
         target = torch.zeros((len(learning_data), 1)).to(self.device)
