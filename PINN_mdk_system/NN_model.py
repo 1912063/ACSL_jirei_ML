@@ -95,7 +95,7 @@ class my_NNmodel(torch.nn.Module):
 
         E = self.loss_function(f, self.target)  #運動方程式の誤差関数
 
-        return E + 5*E_x_ini + 5*E_dx_ini   #重み調整
+        return E + 10*E_x_ini + 10*E_dx_ini   #重み調整
     
     def train(self):
         
