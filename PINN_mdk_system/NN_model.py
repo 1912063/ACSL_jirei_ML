@@ -4,7 +4,7 @@ import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.integrate as integrate
-import gen_data
+from sol_ode import solve_ode
 import matplotlib.animation as animation
 from matplotlib.animation import PillowWriter
 
@@ -44,14 +44,13 @@ class my_NNmodel(torch.nn.Module):
         self.activation = nn.Tanh()
         # self.activation = nn.Softplus()
         self.loss_function = nn.MSELoss()
+
         #############################################################
-        # 変更可能箇所
-        #############################################################
-        # 振り子のパラメータ 
+        #振り子のパラメータ 自由に変更可能
         self.L = 1.0    #振り子の紐の長さ
         self.d = 0.5
         self.m = 1.0
-        self.tau_max = 2.0 #！！！！値を変更したらgen_learningdata.py内のtau_maxも変更する．！！！
+        self.tau = 2.0 #！！！！値を変更したらgen_learningdata.py内のtauも変更する．！！！
         #初期値
         # pi = torch.tensor([np.pi])
         # self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
@@ -59,20 +58,13 @@ class my_NNmodel(torch.nn.Module):
 
         self.x_ini = torch.tensor([[2.0]]).to(self.device) #角度
         self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
-        
-        #############################################################
-        # 
-        self.time = 5.0         # シミュレーション時間
-        self.num_points = 80000 # 学習データ点生成個数
-        self.num_data = 1500    # 入力トルク生成個数
+
         #############################################################
 
         self.iter = 0
         self.loss_hist = []
 
-        # self.learning_data, self.target = import_datas()
-        self.learning_data= torch.from_numpy(gen_data.gen_learning_data(self.time, self.tau_max, self.num_points)).to(self.device)
-        self.input_data = gen_data.gen_input_data(self.time, self.tau_max, self.num_data).to(self.device)
+        self.learning_data, self.target = self.import_datas()
         
         self.learning_data.requires_grad = True
 
@@ -88,25 +80,25 @@ class my_NNmodel(torch.nn.Module):
     
     def cal_loss(self, output):
 
-        tau_max = self.learning_data[:,[1]]
+        tau = self.learning_data[:,[1]]
         dxdt = autograd.grad(output, self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
         # print(dxdt.shape)
         ddxdt = autograd.grad(dxdt[:,[0]], self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
 
         #####################################################
         #運動方程式
-        f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + 9.81/self.L*torch.sin(output) - tau_max/(self.m*self.L**2) 
+        f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + 9.81/self.L*torch.sin(output) - tau/(self.m*self.L**2) 
         #####################################################
 
-        f_x_ini = output[[0]]
-        f_dx_ini = dxdt[0, [0]].reshape((1,1))
+        # f_x_ini = output[[0]]
+        # f_dx_ini = dxdt[0, [0]].reshape((1,1))
 
-        E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
-        E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
+        # E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
+        # E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
 
-        E = self.loss_function(f, self.learning_data[:,1])  #運動方程式の誤差関数
+        E = self.loss_function(f, self.target)  #運動方程式の誤差関数
 
-        return E + 5*E_x_ini + 5*E_dx_ini   #重み調整
+        return E# + 5*E_x_ini + 5*E_dx_ini   #重み調整
     
     def train(self):
         
@@ -137,7 +129,7 @@ class my_NNmodel(torch.nn.Module):
                 
         self.iter += 1
         
-        loss = loss.to(self.device).detach().numpy()
+        loss = loss.to('cpu').detach().numpy()
 
         
 
@@ -166,40 +158,43 @@ class my_NNmodel(torch.nn.Module):
 
         return loss
 
-    # def import_datas(self):
-    #     learning_data = np.load("datas/learning_data.npy", allow_pickle=True)
-    #     learning_data = torch.from_numpy(learning_data).to(self.device)
+    def import_datas(self):
+        learning_data = np.load("datas/learning_data.npy", allow_pickle=True)
+        learning_data = torch.from_numpy(learning_data).to(self.device)
 
-    #     target = torch.zeros((len(learning_data), 1)).to(self.device)
+        target = torch.zeros((len(learning_data), 1)).to(self.device)
 
-    #     return learning_data, target    
+        return learning_data, target
+    
     
     def test(self):
-        # input_array = self.tau_max*np.sin(np.linspace(0, time, num_data)).reshape((num_data,1))
+        num_data = 1500
+        time = 5.0
+        # input_array = self.tau*np.sin(np.linspace(0, time, num_data)).reshape((num_data,1))
         
-        # learning_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1)) ##
-        # # input_array = np.zeros_like(learning_data)
-        # input_array = self.tau_max*np.sin(learning_data)
-        # learning_data = np.concatenate([learning_data, input_array],axis=1)
-        # learning_data = torch.from_numpy(learning_data).to(self.device)
+        learning_data = np.linspace(0., float(time), num_data).reshape((num_data,1)) ##
+        # input_array = np.zeros_like(learning_data)
+        input_array = self.tau*np.sin(learning_data)
+        learning_data = np.concatenate([learning_data, input_array],axis=1)
+        learning_data = torch.from_numpy(learning_data).to(self.device)
 
-        output = self.forward(self.input_data)
-        # learning_data = learning_data.to(self.device).detach().numpy()#.reshape(len(self.learning_data))
-        # learning_data = self.learning_data.to("self.device").detach().numpy()#.reshape(len(self.learning_data))
+        output = self.forward(learning_data)
+        learning_data = learning_data.to("cpu").detach().numpy()#.reshape(len(self.learning_data))
+        # learning_data = self.learning_data.to("cpu").detach().numpy()#.reshape(len(self.learning_data))
         
-        output = output.to(self.device).detach().numpy()
-        self.x_ini = self.x_ini.to(self.device).detach().numpy()
-        self.dx_ini = self.dx_ini.to(self.device).detach().numpy()
+        output = output.to("cpu").detach().numpy()
+        self.x_ini = self.x_ini.to("cpu").detach().numpy()
+        self.dx_ini = self.dx_ini.to("cpu").detach().numpy()
         state = np.array([self.x_ini, self.dx_ini]).reshape((1,2))
-        # G, L, M, D, tau_max
-        # y_learning = integrate.odeint(sol_ode.derivs, state, learning_data[:,0], args=(9.81, self.L, self.m, self.d, self.tau_max))
+        # G, L, M, D, tau
+        # y_learning = integrate.odeint(sol_ode.derivs, state, learning_data[:,0], args=(9.81, self.L, self.m, self.d, self.tau))
 
         # time = learning_data[-1,0] # ！！！！！gen_learningdata.py内のtimeと値を一致させる．！！！！！
         
-        y_learning = solve_ode(state, self.input_data[:,1], 9.81, self.L, self.d, self.m, self.time/self.num_data, self.time)
+        y_learning = solve_ode(state, learning_data[:,1], 9.81, self.L, self.d, self.m, time/len(learning_data), time)
         plt.figure()
-        plt.plot(self.input_data[:,0], output, label="predicted")
-        plt.plot(self.input_data[:,0], y_learning[:,0], label="true")
+        plt.plot(learning_data[:,0], output, label="predicted")
+        plt.plot(learning_data[:,0], y_learning[:,0], label="true")
         plt.xlabel(r"$t$")
         plt.ylabel(r"$\theta$")
         plt.legend()
@@ -250,7 +245,7 @@ class my_NNmodel(torch.nn.Module):
             time_text.set_text(time_template % (i*time_span))
             return line, line2, time_text
         print(len(output))
-        ani = animation.FuncAnimation(fig, animate, range(1, int(self.time/time_span)),
+        ani = animation.FuncAnimation(fig, animate, range(1, int(time/time_span)),
                                     interval=5, blit=True, init_func=init)
         # ani.save("pendulum.gif",writer=PillowWriter())
         ani.save('pendulum.mp4', writer="ffmpeg")
