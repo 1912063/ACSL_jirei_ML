@@ -77,14 +77,14 @@ class my_NNmodel(torch.nn.Module):
     
     def cal_loss(self, output):
 
-        tau = self.learning_data[:,[1]]
+        # tau = self.learning_data[:,[1]]
         dxdt = autograd.grad(output, self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
         # print(dxdt.shape)
         ddxdt = autograd.grad(dxdt[:,[0]], self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
 
         #####################################################
         #運動方程式
-        f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + 9.81/self.L*torch.sin(output) - tau/(self.m*self.L**2) 
+        f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + self.g/self.L*torch.sin(output)# - tau/(self.m*self.L**2) 
         #####################################################
 
         f_x_ini = output[[0]]
@@ -95,7 +95,7 @@ class my_NNmodel(torch.nn.Module):
 
         E = self.loss_function(f, self.target)  #運動方程式の誤差関数
 
-        return E + 10*E_x_ini + 10*E_dx_ini   #重み調整
+        return E + 5*E_x_ini + 5*E_dx_ini   #重み調整
     
     def train(self):
         
@@ -163,18 +163,18 @@ class my_NNmodel(torch.nn.Module):
 
         return learning_data, target
     
-    def ode_func(self, x):
-        dxdt = np.concatenate(([x[0,[1]]], [-self.g/self.L*np.sin(x[0,[0]])-self.d/(self.m*self.L)*x[0,[1]]+1/(self.m*self.L**2)*self.tau]), axis=1)
+    def ode_func(self, x, tau):
+        dxdt = np.concatenate(([x[0,[1]]], [-self.g/self.L*np.sin(x[0,[0]])-self.d/(self.m*self.L)*x[0,[1]]+1/(self.m*self.L**2)*tau]), axis=1)
         
         return dxdt
     
-    def solve_ode(self, x):
+    def solve_ode(self, x, tau):
         sol = np.zeros((int(self.num_data), 2))
         for i in range(int(self.num_data)):
-            f1 = self.ode_func(x)
-            f2 = self.ode_func(x + f1*(self.time/self.num_data)/2)
-            f3 = self.ode_func(x + f2*(self.time/self.num_data)/2)
-            f4 = self.ode_func(x + f3*(self.time/self.num_data))
+            f1 = self.ode_func(x, tau[i])
+            f2 = self.ode_func(x + f1*(self.time/self.num_data)/2, tau[i])
+            f3 = self.ode_func(x + f2*(self.time/self.num_data)/2, tau[i])
+            f4 = self.ode_func(x + f3*(self.time/self.num_data), tau[i])
 
             x = x + (f1 + 2*f2 + 2*f3 + f4)*self.time/self.num_data/6
 
@@ -186,7 +186,14 @@ class my_NNmodel(torch.nn.Module):
         # input_array = self.tau*np.sin(np.linspace(0, time, num_data)).reshape((num_data,1))
         
         ###############################################################
-        # 入力トルク波形input_dataを生成
+        # シミュレーション時間のみ生成用
+        # input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1))
+        # input_data = torch.from_numpy(input_data).to(self.device)
+
+        # output = self.forward(input_data)
+        # input_data = input_data.to(self.device).detach().numpy()#.reshape(len(self.input_data))
+        ###############################################################
+        # 入力トルク波形用
         input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1)) ##
         input_array = self.tau*np.sin(input_data)
         input_data = np.concatenate([input_data, input_array],axis=1)
@@ -205,7 +212,7 @@ class my_NNmodel(torch.nn.Module):
 
         # time = input_data[-1,0] # ！！！！！gen_inputdata.py内のtimeと値を一致させる．！！！！！
         
-        y_learning = self.solve_ode(state)
+        y_learning = self.solve_ode(state, input_data[:,1])
         plt.figure()
         plt.plot(input_data[:,0], output, label="predicted")
         plt.plot(input_data[:,0], y_learning[:,0], label="true")
@@ -256,10 +263,10 @@ class my_NNmodel(torch.nn.Module):
             thisy2 = [0, y2[i]]
             line.set_data(thisx, thisy)
             line2.set_data(thisx2, thisy2)
-            time_text.set_text(time_template % (i*time_span))
+            time_text.set_text(time_template % (i*self.time/self.num_data))
             return line, line2, time_text
         print(len(output))
-        ani = animation.FuncAnimation(fig, animate, range(1, int(self.time/time_span)),
+        ani = animation.FuncAnimation(fig, animate, range(1, int(self.num_data)),
                                     interval=5, blit=True, init_func=init)
         # ani.save("pendulum.gif",writer=PillowWriter())
         ani.save('pendulum.mp4', writer="ffmpeg")
