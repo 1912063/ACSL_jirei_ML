@@ -19,14 +19,14 @@ print(device)
 # 変更可能箇所
 ###########################################
 # 層構造
-input_dim = 2           # 入力層次元数
-num_middle_layers = 8  # 中間層 層数
+input_dim = 1           # 入力層次元数
+num_middle_layers = 4  # 中間層 層数
 num_middle_neurons = 20 # 中間層 ニューロン数
 output_dim = 1          # 出力層 次元数
 ###########################################
 # NN設定条件
-optimizer = "Adam"
-# optimizer = "L-BFGS"
+# optimizer = "Adam"
+optimizer = "L-BFGS"
 max_epochs = 20000
 ###########################################
 input_layer = np.full(1, input_dim, dtype=np.int16)

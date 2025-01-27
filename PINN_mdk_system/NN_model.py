@@ -187,20 +187,22 @@ class my_NNmodel(torch.nn.Module):
         
         ###############################################################
         # シミュレーション時間のみ生成用
-        # input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1))
+        input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1))
+        input_array = np.zeros(self.num_data).reshape((self.num_data,1))
+        input_data = np.concatenate([input_data, input_array],axis=1)
+        input_data = torch.from_numpy(input_data).to(self.device)
+
+        output = self.forward(input_data[:,0])
+        input_data = input_data.to(self.device).detach().numpy()#.reshape(len(self.input_data))
+        ###############################################################
+        # 入力トルク波形用
+        # input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1)) ##
+        # input_array = self.tau*np.sin(input_data)*0
+        # input_data = np.concatenate([input_data, input_array],axis=1)
         # input_data = torch.from_numpy(input_data).to(self.device)
 
         # output = self.forward(input_data)
         # input_data = input_data.to(self.device).detach().numpy()#.reshape(len(self.input_data))
-        ###############################################################
-        # 入力トルク波形用
-        input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1)) ##
-        input_array = self.tau*np.sin(input_data)
-        input_data = np.concatenate([input_data, input_array],axis=1)
-        input_data = torch.from_numpy(input_data).to(self.device)
-
-        output = self.forward(input_data)
-        input_data = input_data.to(self.device).detach().numpy()#.reshape(len(self.input_data))
         ###############################################################
         
         output = output.to(self.device).detach().numpy()
