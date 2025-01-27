@@ -20,7 +20,7 @@ class my_NNmodel(torch.nn.Module):
         self.device = device
         self.linears = nn.ModuleList([nn.Linear(layers[i], layers[i+1]) for i in range(len(layers)-1)])
         if optimizer == "Adam":
-            self.optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
+            self.optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
 
         elif optimizer == "L-BFGS":
             self.optimizer = torch.optim.LBFGS(self.parameters(),lr=1, 
@@ -44,19 +44,19 @@ class my_NNmodel(torch.nn.Module):
         self.d = 0.5
         self.m = 1.0
         self.g = 9.81
-        self.tau = 2.0 #！！！！値を変更したらgen_learningdata.py内のtauも変更する．！！！
+        # self.tau = 2.0 #！！！！値を変更したらgen_learningdata.py内のtauも変更する．！！！
         #初期値
-        # pi = torch.tensor([np.pi])
-        # self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
-        # self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
-
-        self.x_ini = torch.tensor([[2.0]]).to(self.device) #角度
+        pi = torch.tensor([np.pi])
+        self.x_ini = torch.tensor([[1/2*pi]]).to(self.device) #角度
         self.dx_ini = torch.tensor([[0.0]]).to(self.device) #角速度
+
+        # self.x_ini = torch.tensor([[0.0]]).to(self.device) #角度
+        # self.dx_ini = torch.tensor([[6.0]]).to(self.device) #角速度
 
         #############################################################
         # シミュレーション設定条件
         self.time = 5.0
-        self.num_data = 1500    # 入力トルク生成個数
+        self.num_data = int(40*self.time*10)    # 入力トルク生成個数
         #############################################################
         self.iter = 0
         self.loss_hist = []
@@ -64,6 +64,14 @@ class my_NNmodel(torch.nn.Module):
         self.learning_data, self.target = self.import_datas()
         
         self.learning_data.requires_grad = True
+
+        
+        input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1))
+        input_array = np.zeros(self.num_data).reshape((self.num_data,1))
+        input_data = np.concatenate([input_data, input_array],axis=1)
+        input_data = torch.from_numpy(input_data).to(self.device)
+        state = np.array([self.x_ini, self.dx_ini]).reshape((1,2))
+        self.label = self.solve_ode(state, input_data[:,1])
 
     def forward(self, x):
         for i in range(len(self.layers)-2):
@@ -77,25 +85,31 @@ class my_NNmodel(torch.nn.Module):
     
     def cal_loss(self, output):
 
-        # tau = self.learning_data[:,[1]]
-        dxdt = autograd.grad(output, self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
-        # print(dxdt.shape)
-        ddxdt = autograd.grad(dxdt[:,[0]], self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
+        ##################################################################################################################################################################################
+        # # PINNs
+        # dxdt = autograd.grad(output, self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
+        # ddxdt = autograd.grad(dxdt[:,[0]], self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
 
-        #####################################################
-        #運動方程式
-        f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + self.g/self.L*torch.sin(output)# - tau/(self.m*self.L**2) 
-        #####################################################
+        # #####################################################
+        # #運動方程式
+        # f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + self.g/self.L*torch.sin(output)# - tau/(self.m*self.L**2) 
+        # #####################################################
+        # f_x_ini = output[[0]]
+        # f_dx_ini = dxdt[0, [0]].reshape((1,1))
 
-        f_x_ini = output[[0]]
-        f_dx_ini = dxdt[0, [0]].reshape((1,1))
+        # E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
+        # E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
 
-        E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
-        E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
+        # E = self.loss_function(f, self.target)  #運動方程式の誤差関数
 
-        E = self.loss_function(f, self.target)  #運動方程式の誤差関数
-
-        return E + 5*E_x_ini + 5*E_dx_ini   #重み調整
+        # return E + 5*E_x_ini + 5*E_dx_ini   #重み調整
+        ##################################################################################################################################################################################
+        # DDNN
+        label = torch.from_numpy(self.label)
+        E = self.loss_function(output, label[:,[0]])
+        return E
+        ##################################################################################################################################################################################
+        
     
     def train(self):
         
@@ -164,7 +178,8 @@ class my_NNmodel(torch.nn.Module):
         return learning_data, target
     
     def ode_func(self, x, tau):
-        dxdt = np.concatenate(([x[0,[1]]], [-self.g/self.L*np.sin(x[0,[0]])-self.d/(self.m*self.L)*x[0,[1]]+1/(self.m*self.L**2)*tau]), axis=1)
+        # dxdt = np.concatenate(([x[0,[1]]], [-self.g/self.L*np.sin(x[0,[0]])-self.d/(self.m*self.L)*x[0,[1]]+1/(self.m*self.L**2)*tau]), axis=1)
+        dxdt = np.concatenate(([x[0,[1]]], [-self.g/self.L*np.sin(x[0,[0]])-self.d/(self.m*self.L)*x[0,[1]]]), axis=1)
         
         return dxdt
     
@@ -186,16 +201,16 @@ class my_NNmodel(torch.nn.Module):
         # input_array = self.tau*np.sin(np.linspace(0, time, num_data)).reshape((num_data,1))
         
         ###############################################################
-        # シミュレーション時間のみ生成用
+        # １入力の時　シミュレーション時間のみ生成用
         input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1))
         input_array = np.zeros(self.num_data).reshape((self.num_data,1))
         input_data = np.concatenate([input_data, input_array],axis=1)
         input_data = torch.from_numpy(input_data).to(self.device)
 
-        output = self.forward(input_data[:,0])
+        output = self.forward(input_data[:,[0]])
         input_data = input_data.to(self.device).detach().numpy()#.reshape(len(self.input_data))
         ###############################################################
-        # 入力トルク波形用
+        # ２入力の時　入力トルク波形用
         # input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1)) ##
         # input_array = self.tau*np.sin(input_data)*0
         # input_data = np.concatenate([input_data, input_array],axis=1)

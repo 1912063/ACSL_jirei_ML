@@ -28,7 +28,7 @@ output_dim = 1          # 出力層 次元数
 # NN設定条件
 # optimizer = "Adam"
 optimizer = "L-BFGS"
-max_epochs = 1
+max_epochs = 500
 ###########################################
 input_layer = np.full(1, input_dim, dtype=np.int16)
 middle_layers = np.full(num_middle_layers, num_middle_neurons, dtype=np.int16)
