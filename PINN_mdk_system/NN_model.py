@@ -67,11 +67,13 @@ class my_NNmodel(torch.nn.Module):
 
         
         input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1))
+        # input_data[int(self.num_data/2):self.num_data,0] = 0  # シミュレーション時間の後半はlabel無し
         input_array = np.zeros(self.num_data).reshape((self.num_data,1))
         input_data = np.concatenate([input_data, input_array],axis=1)
         input_data = torch.from_numpy(input_data).to(self.device)
         state = np.array([self.x_ini, self.dx_ini]).reshape((1,2))
         self.label = self.solve_ode(state, input_data[:,1]) # DDNN用の正解データ
+        self.label[int(self.num_data/2):self.num_data,[0]] = 0  # DDNNの学習区間制限用
 
     def forward(self, x):
         for i in range(len(self.layers)-2):
@@ -102,11 +104,15 @@ class my_NNmodel(torch.nn.Module):
 
         # E = self.loss_function(f, self.target)  #運動方程式の誤差関数
 
-        # return E + 5*E_x_ini + 5*E_dx_ini   #重み調整
+        # #label = torch.from_numpy(self.label)
+        # #E_label = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
+
+        # return E + 5*E_x_ini + 5*E_dx_ini #+ 0.01*E_label   #重み調整
         ##################################################################################################################################################################################
         # DDNN
         label = torch.from_numpy(self.label)
-        E = self.loss_function(output, label[:,[0]])
+        # E = self.loss_function(output, label[:,[0]])
+        E = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
         return E
         ##################################################################################################################################################################################
         
