@@ -20,7 +20,7 @@ class my_NNmodel(torch.nn.Module):
         self.device = device
         self.linears = nn.ModuleList([nn.Linear(layers[i], layers[i+1]) for i in range(len(layers)-1)])
         if optimizer == "Adam":
-            self.optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
+            self.optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
 
         elif optimizer == "L-BFGS":
             self.optimizer = torch.optim.LBFGS(self.parameters(),lr=1, 
@@ -55,8 +55,8 @@ class my_NNmodel(torch.nn.Module):
 
         #############################################################
         # シミュレーション設定条件
-        self.time = 5.0
-        self.num_data = int(40*self.time*10)    # 入力トルク生成個数
+        self.time = 10.
+        self.num_data = int(40*self.time*10)    # 2.5 ms刻みでtime分のデータ個数
         #############################################################
         self.iter = 0
         self.loss_hist = []
@@ -71,7 +71,7 @@ class my_NNmodel(torch.nn.Module):
         input_data = np.concatenate([input_data, input_array],axis=1)
         input_data = torch.from_numpy(input_data).to(self.device)
         state = np.array([self.x_ini, self.dx_ini]).reshape((1,2))
-        self.label = self.solve_ode(state, input_data[:,1])
+        self.label = self.solve_ode(state, input_data[:,1]) # DDNN用の正解データ
 
     def forward(self, x):
         for i in range(len(self.layers)-2):
@@ -230,9 +230,27 @@ class my_NNmodel(torch.nn.Module):
         # time = input_data[-1,0] # ！！！！！gen_inputdata.py内のtimeと値を一致させる．！！！！！
         
         y_learning = self.solve_ode(state, input_data[:,1])
+
+        # 精度検証
+        error_sum = 0.
+        for i in range(self.num_data):
+            error_sum = abs(y_learning[i,0] - output[i,0])
+        error = error_sum/self.num_data
+        print("絶対平均誤差：", error)
+
         plt.figure()
         plt.plot(input_data[:,0], output, label="predicted")
-        plt.plot(input_data[:,0], y_learning[:,0], label="true")
+
+        true_input = np.zeros(int(self.num_data/50)).reshape((int(self.num_data/50),1))
+        true_output = np.zeros(int(self.num_data/50)).reshape((int(self.num_data/50),1))
+        j = 0
+        for i in range(self.num_data):
+            if i % 50 ==0:    # 正解点の表示数を減らす用
+                true_input[j,0] = input_data[i,0]
+                true_output[j,0] = y_learning[i,0]
+                j += 1
+
+        plt.plot(true_input[:,0], true_output[:,0], linestyle="None", marker = "o", label="true")
         plt.xlabel(r"$t$")
         plt.ylabel(r"$\theta$")
         plt.legend()
