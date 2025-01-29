@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import scipy.integrate as integrate
 import matplotlib.animation as animation
 from matplotlib.animation import PillowWriter
+plt.rcParams["font.size"] = 16
+
 
 torch.set_default_dtype(torch.float64)
 
@@ -88,32 +90,32 @@ class my_NNmodel(torch.nn.Module):
     def cal_loss(self, output):
 
         ##################################################################################################################################################################################
-        # # PINNs
-        # dxdt = autograd.grad(output, self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
-        # ddxdt = autograd.grad(dxdt[:,[0]], self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
+        # PINNs
+        dxdt = autograd.grad(output, self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
+        ddxdt = autograd.grad(dxdt[:,[0]], self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
 
-        # #####################################################
-        # #運動方程式
-        # f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + self.g/self.L*torch.sin(output)# - tau/(self.m*self.L**2) 
-        # #####################################################
-        # f_x_ini = output[[0]]
-        # f_dx_ini = dxdt[0, [0]].reshape((1,1))
+        #####################################################
+        #運動方程式
+        f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + self.g/self.L*torch.sin(output)# - tau/(self.m*self.L**2) 
+        #####################################################
+        f_x_ini = output[[0]]
+        f_dx_ini = dxdt[0, [0]].reshape((1,1))
 
-        # E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
-        # E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
+        E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
+        E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
 
-        # E = self.loss_function(f, self.target)  #運動方程式の誤差関数
+        E = self.loss_function(f, self.target)  #運動方程式の誤差関数
 
-        # #label = torch.from_numpy(self.label)
-        # #E_label = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
+        #label = torch.from_numpy(self.label)
+        #E_label = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
 
-        # return E + 5*E_x_ini + 5*E_dx_ini #+ 0.01*E_label   #重み調整
+        return E + 5*E_x_ini + 5*E_dx_ini #+ 0.01*E_label   #重み調整
         ##################################################################################################################################################################################
-        # DDNN
-        label = torch.from_numpy(self.label)
-        # E = self.loss_function(output, label[:,[0]])
-        E = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
-        return E
+        # # DDNN
+        # label = torch.from_numpy(self.label)
+        # # E = self.loss_function(output, label[:,[0]])
+        # E = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
+        # return E
         ##################################################################################################################################################################################
         
     
