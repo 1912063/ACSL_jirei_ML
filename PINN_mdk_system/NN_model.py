@@ -69,13 +69,12 @@ class my_NNmodel(torch.nn.Module):
 
         
         input_data = np.linspace(0., float(self.time), self.num_data).reshape((self.num_data,1))
-        # input_data[int(self.num_data/2):self.num_data,0] = 0  # シミュレーション時間の後半はlabel無し
         input_array = np.zeros(self.num_data).reshape((self.num_data,1))
         input_data = np.concatenate([input_data, input_array],axis=1)
         input_data = torch.from_numpy(input_data).to(self.device)
         state = np.array([self.x_ini, self.dx_ini]).reshape((1,2))
         self.label = self.solve_ode(state, input_data[:,1]) # DDNN用の正解データ
-        self.label[int(self.num_data/2):self.num_data,[0]] = 0  # DDNNの学習区間制限用
+        # self.label[int(self.num_data/2):self.num_data,[0]] = 0  # DDNNの学習区間制限用
 
     def forward(self, x):
         for i in range(len(self.layers)-2):
@@ -90,32 +89,32 @@ class my_NNmodel(torch.nn.Module):
     def cal_loss(self, output):
 
         ##################################################################################################################################################################################
-        # PINNs
-        dxdt = autograd.grad(output, self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
-        ddxdt = autograd.grad(dxdt[:,[0]], self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
+        # # PINNs
+        # dxdt = autograd.grad(output, self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
+        # ddxdt = autograd.grad(dxdt[:,[0]], self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
 
-        #####################################################
-        #運動方程式
-        f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + self.g/self.L*torch.sin(output)# - tau/(self.m*self.L**2) 
-        #####################################################
-        f_x_ini = output[[0]]
-        f_dx_ini = dxdt[0, [0]].reshape((1,1))
+        # #####################################################
+        # #運動方程式
+        # f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + self.g/self.L*torch.sin(output)# - tau/(self.m*self.L**2) 
+        # #####################################################
+        # f_x_ini = output[[0]]
+        # f_dx_ini = dxdt[0, [0]].reshape((1,1))
 
-        E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
-        E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
+        # E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
+        # E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
 
-        E = self.loss_function(f, self.target)  #運動方程式の誤差関数
+        # E = self.loss_function(f, self.target)  #運動方程式の誤差関数
 
-        #label = torch.from_numpy(self.label)
-        #E_label = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
+        # #label = torch.from_numpy(self.label)
+        # #E_label = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
 
-        return E + 5*E_x_ini + 5*E_dx_ini #+ 0.01*E_label   #重み調整
+        # return E + 5*E_x_ini + 5*E_dx_ini #+ 0.01*E_label   #重み調整
         ##################################################################################################################################################################################
-        # # DDNN
-        # label = torch.from_numpy(self.label)
-        # # E = self.loss_function(output, label[:,[0]])
+        # DDNN
+        label = torch.from_numpy(self.label)
+        E = self.loss_function(output, label[:,[0]])
         # E = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
-        # return E
+        return E
         ##################################################################################################################################################################################
         
     

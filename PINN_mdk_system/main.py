@@ -23,7 +23,7 @@ print(device)
 input_dim = 1           # 入力層次元数
 num_middle_layers = 6  # 中間層 層数
 num_middle_neurons = 20 # 中間層 ニューロン数
-output_dim = 1          # 出力層 次元数
+output_dim = 1          # 出力層 次元数 
 ###########################################
 # NN設定条件
 # optimizer = "Adam"
