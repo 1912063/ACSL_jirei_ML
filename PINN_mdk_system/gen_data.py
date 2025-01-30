@@ -9,7 +9,7 @@ np.random.seed(123)
 
 
 # tau_max = 2.0
-time = 10.
+time = 5.
 #学習データ
 num_data = int(40*time*10) ##
 

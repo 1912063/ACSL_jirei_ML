@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import scipy.integrate as integrate
 import matplotlib.animation as animation
 from matplotlib.animation import PillowWriter
+import time
 plt.rcParams["font.size"] = 16
 
 
@@ -22,7 +23,7 @@ class my_NNmodel(torch.nn.Module):
         self.device = device
         self.linears = nn.ModuleList([nn.Linear(layers[i], layers[i+1]) for i in range(len(layers)-1)])
         if optimizer == "Adam":
-            self.optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
+            self.optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
 
         elif optimizer == "L-BFGS":
             self.optimizer = torch.optim.LBFGS(self.parameters(),lr=1, 
@@ -57,7 +58,7 @@ class my_NNmodel(torch.nn.Module):
 
         #############################################################
         # シミュレーション設定条件
-        self.time = 10.
+        self.time = 5.
         self.num_data = int(40*self.time*10)    # 2.5 ms刻みでtime分のデータ個数
         #############################################################
         self.iter = 0
@@ -89,32 +90,32 @@ class my_NNmodel(torch.nn.Module):
     def cal_loss(self, output):
 
         ##################################################################################################################################################################################
-        # # PINNs
-        # dxdt = autograd.grad(output, self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
-        # ddxdt = autograd.grad(dxdt[:,[0]], self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
+        # PINNs
+        dxdt = autograd.grad(output, self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
+        ddxdt = autograd.grad(dxdt[:,[0]], self.learning_data, torch.ones([len(self.learning_data),1]).to(self.device), retain_graph=True, create_graph=True,allow_unused=True)[0]
 
-        # #####################################################
-        # #運動方程式
-        # f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + self.g/self.L*torch.sin(output)# - tau/(self.m*self.L**2) 
-        # #####################################################
-        # f_x_ini = output[[0]]
-        # f_dx_ini = dxdt[0, [0]].reshape((1,1))
+        #####################################################
+        #運動方程式
+        f = ddxdt[:,[0]] + self.d/(self.m*self.L)*dxdt[:,[0]] + self.g/self.L*torch.sin(output)# - tau/(self.m*self.L**2) 
+        #####################################################
+        f_x_ini = output[[0]]
+        f_dx_ini = dxdt[0, [0]].reshape((1,1))
 
-        # E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
-        # E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
+        E_x_ini = self.loss_function(f_x_ini, self.x_ini)   #初期角度の誤差関数
+        E_dx_ini = self.loss_function(f_dx_ini, self.dx_ini)    #初期角速度の誤差関数
 
-        # E = self.loss_function(f, self.target)  #運動方程式の誤差関数
+        E = self.loss_function(f, self.target)  #運動方程式の誤差関数
 
-        # #label = torch.from_numpy(self.label)
-        # #E_label = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
+        #label = torch.from_numpy(self.label)
+        #E_label = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
 
-        # return E + 5*E_x_ini + 5*E_dx_ini #+ 0.01*E_label   #重み調整
+        return E + 5*E_x_ini + 5*E_dx_ini #+ 0.01*E_label   #重み調整
         ##################################################################################################################################################################################
-        # DDNN
-        label = torch.from_numpy(self.label)
-        E = self.loss_function(output, label[:,[0]])
-        # E = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
-        return E
+        # # DDNN
+        # label = torch.from_numpy(self.label)
+        # E = self.loss_function(output, label[:,[0]])
+        # # E = self.loss_function(output[0:int(self.num_data/2)-1,[0]], label[0:int(self.num_data/2)-1,[0]])
+        # return E
         ##################################################################################################################################################################################
         
     
@@ -214,7 +215,13 @@ class my_NNmodel(torch.nn.Module):
         input_data = np.concatenate([input_data, input_array],axis=1)
         input_data = torch.from_numpy(input_data).to(self.device)
 
+        # NN計算時間
+        time_start = time.time()
         output = self.forward(input_data[:,[0]])
+        time_end = time.time()
+        time_diff = time_end - time_start
+        print("NN計算時間：", time_diff)
+
         input_data = input_data.to(self.device).detach().numpy()#.reshape(len(self.input_data))
         ###############################################################
         # ２入力の時　入力トルク波形用
@@ -234,9 +241,12 @@ class my_NNmodel(torch.nn.Module):
         # G, L, M, D, tau
         # y_input = integrate.odeint(sol_ode.derivs, state, input_data[:,0], args=(9.81, self.L, self.m, self.d, self.tau))
 
-        # time = input_data[-1,0] # ！！！！！gen_inputdata.py内のtimeと値を一致させる．！！！！！
-        
+        # ４次ルンゲクッタ法計算時間計測
+        time_start = time.time()
         y_learning = self.solve_ode(state, input_data[:,1])
+        time_end = time.time()
+        time_diff = time_end - time_start
+        print("数値シミュレーション計算時間：", time_diff)
 
         # 精度検証
         error_sum = 0.
@@ -257,7 +267,7 @@ class my_NNmodel(torch.nn.Module):
                 true_output[j,0] = y_learning[i,0]
                 j += 1
 
-        plt.plot(true_input[:,0], true_output[:,0], linestyle="None", marker = "o", label="true")
+        plt.plot(true_input[:,0], true_output[:,0], linestyle="None", marker = "o", markersize = 4, label="true")
         plt.xlabel(r"$t$")
         plt.ylabel(r"$\theta$")
         plt.legend()
@@ -308,9 +318,9 @@ class my_NNmodel(torch.nn.Module):
             time_text.set_text(time_template % (i*self.time/self.num_data))
             return line, line2, time_text
         print(len(output))
-        ani = animation.FuncAnimation(fig, animate, range(1, int(self.num_data)),
-                                    interval=5, blit=True, init_func=init)
-        # ani.save("pendulum.gif",writer=PillowWriter())
-        ani.save('pendulum.mp4', writer="ffmpeg")
+        # ani = animation.FuncAnimation(fig, animate, range(1, int(self.num_data)),
+        #                             interval=5, blit=True, init_func=init)
+        # # ani.save("pendulum.gif",writer=PillowWriter())
+        # ani.save('pendulum.mp4', writer="ffmpeg")
 # plt.show()
         return output
