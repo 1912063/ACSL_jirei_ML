@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from NN_model import my_NNmodel as NN
 import matplotlib.animation as animation
 from matplotlib.animation import PillowWriter
+import time
 
 torch.set_default_dtype(torch.float64)
 torch.manual_seed(123)
@@ -17,27 +18,39 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
 ###########################################
-# 層構造 変更可能部
-input_dim = 2           # 入力層次元数
-num_middle_layers = 12  # 中間層 層数
+# 変更可能箇所
+###########################################
+# 層構造
+input_dim = 1           # 入力層次元数
+num_middle_layers = 6  # 中間層 層数
 num_middle_neurons = 20 # 中間層 ニューロン数
-output_dim = 1          # 出力層 次元数
+output_dim = 1          # 出力層 次元数 
+###########################################
+# NN設定条件
+optimizer = "Adam"
+# optimizer = "L-BFGS"
+epochs = 10000
 ###########################################
 input_layer = np.full(1, input_dim, dtype=np.int16)
 middle_layers = np.full(num_middle_layers, num_middle_neurons, dtype=np.int16)
 output_layer = np.full(1, output_dim, dtype=np.int16)
 layers = np.concatenate([input_layer, middle_layers, output_layer])
 
-# optimizer = "Adam"
-optimizer = "L-BFGS"
-max_epochs = 10000
 
-my_Net = NN(layers, optimizer, max_epochs, device).to(device)
+
+my_Net = NN(layers, optimizer, epochs, device).to(device)
+time_start = time.time()
 if optimizer == "L-BFGS":
     my_Net.optimizer.step(my_Net.closure)
+    epochs = my_Net.iter
 else:
     my_Net.train()
 
+time_end = time.time()
+time_diff = time_end - time_start
+
+print("学習時間：", time_diff)
+print("1epoch当たりの計算時間：", time_diff/epochs)
 np.save("loss", my_Net.loss_hist)
 # output = my_Net.test()
 # output = output.reshape(len(output), )
