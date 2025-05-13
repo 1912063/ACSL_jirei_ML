@@ -47,11 +47,12 @@ class titanic_classification(nn.Module):
 
         return E
 
-    def back_propagation(self): # optim = 'Adam'の時に学習として実行される部分
+    # optim = 'Adam'の時に学習として実行される部分------------------------------------------
+    def back_propagation(self):
 
         for self.iter in range(self.epochs):
             
-            self.optimizer.zero_grad()
+            self.optimizer.zero_grad() # 勾配を初期化してリセット
             x = self.forward(self.data) # 順伝播
             loss = self.cal_loss(x, self.survived) # 誤差の計算
             print("Epochs =", self.iter, "loss =", loss)
@@ -66,7 +67,7 @@ class titanic_classification(nn.Module):
         plt.legend()
         plt.grid()
         plt.show()
-    
+    # ------------------------------------------------------------------------------------
             
     def closure(self):
             
