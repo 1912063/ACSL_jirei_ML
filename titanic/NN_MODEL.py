@@ -47,7 +47,7 @@ class titanic_classification(nn.Module):
 
         return E
 
-    def back_propagation(self):
+    def back_propagation(self): # optim = 'Adam'の時に学習として実行される部分
 
         for self.iter in range(self.epochs):
             

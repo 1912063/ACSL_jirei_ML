@@ -49,12 +49,13 @@ elif optim == "RMSprop":
     NN.optimizer = torch.optim.Adam(NN.parameters(), lr=0.001, weight_decay=0.001)
     # lr(learning rate):学習率，weight_decay:重み減衰
 
-
+# 実際に学習----------------------------------
 # print(HLNN.linears[0].bias)
 if optim == "L-BFGS":
     NN.optimizer.step(NN.closure)
 else:
     NN.back_propagation()
+# -------------------------------------------
 
 NN.test() # test関数:学習後にテストデータを使って実際に予測を行う
 
